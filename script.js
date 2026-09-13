@@ -1,16 +1,17 @@
 let score = 0;
 let time = 30;
+let gameRunning = false;
+let timer;
 
 const target = document.getElementById("target");
 const scoreText = document.getElementById("score");
 const timeText = document.getElementById("time");
+const bestText = document.getElementById("best");
 const gameArea = document.getElementById("gameArea");
+const startButton = document.getElementById("startButton");
 
-target.addEventListener("click", function () {
-  score++;
-  scoreText.textContent = score;
-  moveTarget();
-});
+let bestScore = localStorage.getItem("bestScore") || 0;
+bestText.textContent = bestScore;
 
 function moveTarget() {
   const maxX = gameArea.clientWidth - target.offsetWidth;
@@ -23,15 +24,53 @@ function moveTarget() {
   target.style.top = y + "px";
 }
 
-moveTarget();
+function startGame() {
+  score = 0;
+  time = 30;
+  gameRunning = true;
 
-const timer = setInterval(function () {
-  time--;
+  scoreText.textContent = score;
   timeText.textContent = time;
 
-  if (time <= 0) {
-    clearInterval(timer);
-    target.disabled = true;
-    alert("Game Over! Your score is " + score);
+  target.style.display = "block";
+  startButton.textContent = "🔄 Restart Game";
+
+  moveTarget();
+
+  clearInterval(timer);
+
+  timer = setInterval(function () {
+    time--;
+    timeText.textContent = time;
+
+    if (time <= 0) {
+      endGame();
+    }
+  }, 1000);
+}
+
+function endGame() {
+  gameRunning = false;
+  clearInterval(timer);
+
+  target.style.display = "none";
+
+  if (score > bestScore) {
+    bestScore = score;
+    localStorage.setItem("bestScore", bestScore);
+    bestText.textContent = bestScore;
   }
-}, 1000);
+
+  alert("🎉 Game Over!\nYour score: " + score);
+}
+
+target.addEventListener("click", function () {
+  if (!gameRunning) return;
+
+  score++;
+  scoreText.textContent = score;
+
+  moveTarget();
+});
+
+startButton.addEventListener("click", startGame);
